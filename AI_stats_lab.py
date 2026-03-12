@@ -85,51 +85,54 @@ def lasso_regression_diabetes(lambda_reg=0.1, lr=0.01, epochs=2000):
 # Q2 Polynomial Overfitting
 # =========================
 
-def lasso_regression_diabetes(lambda_reg=0.1, lr=0.01, epochs=2000):
+def polynomial_overfitting_experiment(max_degree=10):
     """
-    Implement Lasso regression using gradient descent.
+    Study overfitting using polynomial regression.
     """
 
-    # TODO: Load diabetes dataset
+    # TODO: Load dataset
     data = load_diabetes()
     X, y = data.data, data.target
 
+    # TODO: Select BMI feature only
+    X_bmi = X[:, 2].reshape(-1, 1)
+
     # TODO: Train/test split
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
+        X_bmi, y, test_size=0.2, random_state=42
     )
 
-    # TODO: Standardize features
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    degrees = []
+    train_errors = []
+    test_errors = []
 
-    # TODO: Add bias column
-    X_train_b = add_bias(X_train)
-    X_test_b = add_bias(X_test)
+    # TODO: Loop through polynomial degrees
+    for degree in range(1, max_degree + 1):
 
-    # TODO: Initialize theta
-    theta = np.zeros(X_train_b.shape[1])
-    n = len(y_train)
+        # TODO: Create polynomial features
+        poly = PolynomialFeatures(degree=degree, include_bias=False)
+        X_train_poly = poly.fit_transform(X_train)
+        X_test_poly = poly.transform(X_test)
 
-    # TODO: Implement gradient descent with L1 regularization
-    for _ in range(epochs):
-        y_pred = X_train_b @ theta
-        error = y_pred - y_train
+        X_train_b = add_bias(X_train_poly)
+        X_test_b = add_bias(X_test_poly)
 
-        grad = (1 / n) * X_train_b.T @ error
-        grad[1:] += lambda_reg * np.sign(theta[1:])
+        # TODO: Fit regression using normal equation
+        try:
+            theta = np.linalg.pinv(X_train_b.T @ X_train_b) @ X_train_b.T @ y_train
+        except np.linalg.LinAlgError:
+            theta = np.zeros(X_train_b.shape[1])
 
-        theta -= lr * grad
+        # TODO: Compute train/test errors
+        train_pred = X_train_b @ theta
+        test_pred = X_test_b @ theta
 
-    # TODO: Compute predictions
-    train_preds = X_train_b @ theta
-    test_preds = X_test_b @ theta
+        degrees.append(degree)
+        train_errors.append(mse(y_train, train_pred))
+        test_errors.append(mse(y_test, test_pred))
 
-    # TODO: Compute metrics
-    train_mse = mse(y_train, train_preds)
-    test_mse = mse(y_test, test_preds)
-    train_r2 = r2_score(y_train, train_preds)
-    test_r2 = r2_score(y_test, test_preds)
-
-    return train_mse, test_mse, train_r2, test_r2, theta
+    return {
+        "degrees": degrees,
+        "train_mse": train_errors,
+        "test_mse": test_errors,
+    }
