@@ -38,37 +38,98 @@ def lasso_regression_diabetes(lambda_reg=0.1, lr=0.01, epochs=2000):
     """
 
     # TODO: Load diabetes dataset
+    data = load_diabetes()
+    X, y = data.data, data.target
+
     # TODO: Train/test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
     # TODO: Standardize features
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
     # TODO: Add bias column
+    X_train_b = add_bias(X_train)
+    X_test_b = add_bias(X_test)
+
     # TODO: Initialize theta
+    theta = np.zeros(X_train_b.shape[1])
+    n = len(y_train)
+
     # TODO: Implement gradient descent with L1 regularization
+    for _ in range(epochs):
+        y_pred = X_train_b @ theta
+        error = y_pred - y_train
+
+        grad = (1 / n) * X_train_b.T @ error
+        grad[1:] += lambda_reg * np.sign(theta[1:])
+
+        theta -= lr * grad
+
     # TODO: Compute predictions
+    train_preds = X_train_b @ theta
+    test_preds = X_test_b @ theta
+
     # TODO: Compute metrics
+    train_mse = mse(y_train, train_preds)
+    test_mse = mse(y_test, test_preds)
+    train_r2 = r2_score(y_train, train_preds)
+    test_r2 = r2_score(y_test, test_preds)
 
-    raise NotImplementedError
-
+    return train_mse, test_mse, train_r2, test_r2, theta
 
 # =========================
 # Q2 Polynomial Overfitting
 # =========================
 
-def polynomial_overfitting_experiment(max_degree=10):
+def lasso_regression_diabetes(lambda_reg=0.1, lr=0.01, epochs=2000):
     """
-    Study overfitting using polynomial regression.
+    Implement Lasso regression using gradient descent.
     """
 
-    # TODO: Load dataset
-    # TODO: Select BMI feature only
+    # TODO: Load diabetes dataset
+    data = load_diabetes()
+    X, y = data.data, data.target
+
     # TODO: Train/test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
-    degrees = []
-    train_errors = []
-    test_errors = []
+    # TODO: Standardize features
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
-    # TODO: Loop through polynomial degrees
-    # TODO: Create polynomial features
-    # TODO: Fit regression using normal equation
-    # TODO: Compute train/test errors
+    # TODO: Add bias column
+    X_train_b = add_bias(X_train)
+    X_test_b = add_bias(X_test)
 
-    raise NotImplementedError
+    # TODO: Initialize theta
+    theta = np.zeros(X_train_b.shape[1])
+    n = len(y_train)
+
+    # TODO: Implement gradient descent with L1 regularization
+    for _ in range(epochs):
+        y_pred = X_train_b @ theta
+        error = y_pred - y_train
+
+        grad = (1 / n) * X_train_b.T @ error
+        grad[1:] += lambda_reg * np.sign(theta[1:])
+
+        theta -= lr * grad
+
+    # TODO: Compute predictions
+    train_preds = X_train_b @ theta
+    test_preds = X_test_b @ theta
+
+    # TODO: Compute metrics
+    train_mse = mse(y_train, train_preds)
+    test_mse = mse(y_test, test_preds)
+    train_r2 = r2_score(y_train, train_preds)
+    test_r2 = r2_score(y_test, test_preds)
+
+    return train_mse, test_mse, train_r2, test_r2, theta
